@@ -3,7 +3,7 @@ version = 1.0
 specfile = $(name).spec
 rpmbuild_sources = ~/rpmbuild/SOURCES
 tarball = $(name)-$(version).tar.gz
-files = cpanfile inc/cpanm inc/perl-build inc/patch-path
+files = cpanfile inc/cpanm inc/perl-build
 
 rpm:
 	tar zcf $(tarball) --transform 's,^,$(name)-$(version)/,' $(files)
