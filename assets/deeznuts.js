@@ -2,7 +2,6 @@ $( function() {
     var socket = new WebSocket( "ws://104.131.190.72:3000/connect" );
     socket.onopen = function () {
 	socket.onmessage = function ( msg ) {
-	    console.log( "got initial hello message: " + msg );
 	    var parsed = JSON.parse( msg.data );
 	    startGame( socket, parsed.players );
 	}
@@ -110,8 +109,6 @@ function startGame ( socket, currentPlayers ) {
 	// Create the other players currently in the game.
 	for ( var i = 0; i < currentPlayers.length; i++ ) {
 	    var otherPlayer = currentPlayers[i];
-	    console.log( "creating other player " + otherPlayer.id +
-			 " with x: " + otherPlayer.x + " and y: " + otherPlayer.y );
 	    otherPlayers[otherPlayer.id] = game.add.sprite(
 		otherPlayer.x, otherPlayer.y, 'dude'
 	    );
@@ -123,29 +120,24 @@ function startGame ( socket, currentPlayers ) {
 
     function update() {
 	socket.onmessage = function ( msg ) {
-	    var update = JSON.parse( msg.data );
-/*
-	    if ( update.player ) {
-		console.log("received update for other player");
-		if ( !otherPlayers[update.player] ) {
-		    otherPlayers[update.player] = game.add.sprite(
-			0, 0, 'dude'
-		    );
-		}
+	    var update = JSON.parse( msg.data );	    
 
-		
-
-		otherPlayers[update.player].x = update.x;
-		otherPlayers[update.player].y = update.y;
-		otherPlayers[update.player].frame  = update.frame;
-	    }
-*/
 	    if ( update.goodbye ) {
-		console.log( "received goodbye for " + update.goodbye );
 		if ( otherPlayers[update.goodbye] ) {
 		    otherPlayers[update.goodbye].kill();
 		    delete otherPlayers[update.goodbye];
 		}
+	    }
+	    else {
+		if ( !otherPlayers[update.id] ) {
+		    otherPlayers[update.id] = game.add.sprite(
+			0, 0, 'dude'
+		    );
+		}		
+
+		otherPlayers[update.id].x = update.x;
+		otherPlayers[update.id].y = update.y;
+		otherPlayers[update.id].frame  = update.frame;
 	    }
 	};
 

@@ -14,7 +14,7 @@ sub index {
 sub connect {
     my ( $c ) = @_;
 
-    $c->app->log->debug( sprintf "Player connected: %s", $c->tx->connection );
+    $c->app->log->info( sprintf "Player connected: %s", $c->tx->connection );
 
     # Keep track of the new player that just connected.
     my $new_player = DeezNuts::Model::Player->new(
@@ -28,15 +28,14 @@ sub connect {
         grep { $_->is_connected }
         values %$players;
 
-    use Data::Dumper;
-    warn "other players: " . Dumper [ keys %$players ];
-    warn "other players data: " . Dumper [ @other_players_data ];
-
     # Tell the player that just connected where all the other players are.
     $new_player->send({
 	welcome => $new_player->id,
 	players => [ @other_players_data ],
     });
+
+    # Tell all other players where the player that just connected is.
+    $_->send( $new_player->serialize ) for values %$players;
 
     $players->{ $new_player->id } = $new_player;
 
@@ -66,13 +65,8 @@ sub connect {
 	    
 	# Send the update to every other client.
 	for my $other_player ( @other_players ) {
-	    #warn "found other player to send update to";
-	    $players->{$other_player}->send({ player => $player->serialize });
+	    $players->{$other_player}->send( $player->serialize );
 	}
-
-	use Data::Dumper;
-	my @players = values %$players;
-	#warn Dumper $_->serialize for @players;
     });
 }   
 

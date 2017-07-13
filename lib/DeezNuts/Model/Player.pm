@@ -11,15 +11,7 @@ has frame => ( is => 'rw' );
 
 sub send {
     my ( $self, $data ) = @_;
-
-    if ( $data->{welcome} ) {
-	warn "sending welcome to " . $data->{welcome};
-    }
-
-    #warn "sending data to " . $self->id;
-    my $ret = $self->tx->send({ json => $data });
-    use Data::Dumper;
-    warn Dumper $ret;
+    $self->tx->send({ json => $data });
 }
 
 sub serialize {
