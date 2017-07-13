@@ -1,5 +1,7 @@
 package DeezNuts;
 
+our $VERSION = '0.1';
+
 use Mojo::Base 'Mojolicious';
 
 sub startup {
