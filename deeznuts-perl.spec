@@ -1,5 +1,5 @@
 %define perl_version 5.26.0
-%define prefix /usr/local/deeznuts/
+%define prefix /opt/deeznuts/
 %define perl_path %{prefix}perl/
 %define perl %{perl_path}bin/perl
 
