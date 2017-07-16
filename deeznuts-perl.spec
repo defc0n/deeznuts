@@ -24,24 +24,28 @@ Backend Perl & Libraries for DeezNuts.
 %build
 
 %install
-PERL_BUILD_INSTALL_OPTIONS="DESTDIR=$RPM_BUILD_ROOT" inc/perl-build --noman \
-    %{perl_version} %{perl_path}
+PERL_BUILD_INSTALL_OPTIONS="DESTDIR=$RPM_BUILD_ROOT" inc/perl-build --noman %{perl_version} %{perl_path}
 
 # https://github.com/miyagawa/cpanminus/issues/396#issuecomment-54322877
-export PERL5LIB=$( %{buildroot}%{perl} -MConfig -e \
+export PERL5LIB=$( %{buildroot}%{perl} -I%{buildroot}%{perl_path}lib/%{perl_version} -MConfig -e \
     'print $Config{privlibexp};' ):$PERL5LIB
-export PERL5LIB=%{buildroot}/$( %{buildroot}%{perl} -MConfig -e \
+export PERL5LIB=%{buildroot}/$( %{buildroot}%{perl} -I%{buildroot}%{perl_path}lib/%{perl_version} -MConfig -e \
     'print $Config{privlibexp};' ):$PERL5LIB
-export PERL5LIB=%{buildroot}/$( %{buildroot}%{perl} -MConfig -e \
+export PERL5LIB=%{buildroot}/$( %{buildroot}%{perl} -I%{buildroot}%{perl_path}lib/%{perl_version} -MConfig -e \
     'print $Config{vendorlibexp};' ):$PERL5LIB
-export PERL5LIB=%{buildroot}/$( %{buildroot}%{perl} -MConfig -e \
+export PERL5LIB=%{buildroot}/$( %{buildroot}%{perl} -I%{buildroot}%{perl_path}lib/%{perl_version} -MConfig -e \
     'print $Config{sitelibexp};' ):$PERL5LIB
+export PERL5LIB=%{buildroot}/$( %{buildroot}%{perl} -I%{buildroot}%{perl_path}lib/%{perl_version} -MConfig -e \
+    'print $Config{archlibexp};' ):$PERL5LIB
+export PERL5LIB=%{buildroot}/$( %{buildroot}%{perl} -I%{buildroot}%{perl_path}lib/%{perl_version} -MConfig -e \
+    'print $Config{sitearchexp};' ):$PERL5LIB
 
-export PERL_MB_OPT="--installdirs site --destdir $RPM_BUILD_ROOT"
+export PERL_SRC="%{buildroot}%{perl_path}"
+export PERL_MB_OPT="--installdirs site --destdir $RPM_BUILD_ROOT create_packlist=0"
 export DESTDIR=$RPM_BUILD_ROOT
 export PERL_MM_OPT="INSTALLDIRS=site DESTDIR=$RPM_BUILD_ROOT"
 
-%{buildroot}%{perl} inc/cpanm --notest --no-man-pages --installdeps .
+%{buildroot}%{perl} -I%{buildroot}%{perl_path}lib/%{perl_version} inc/cpanm --notest --no-man-pages --installdeps .
 
 # Strip the RPM build dir path inside all installed files recursively.
 find %{buildroot}%{perl_path} -type f -print0 | \
