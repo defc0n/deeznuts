@@ -3,8 +3,10 @@ package DeezNuts::Controller::Root;
 use Mojo::Base 'Mojolicious::Controller';
 
 use DeezNuts::Model::Player;
+use FishServe::World::Grid;
 
 my $players = {};
+my $grid = FishServe::World::Grid->new( num_fish => 10_000 );
 
 sub index {
     my ( $c ) = @_;
@@ -37,8 +39,10 @@ sub connect {
     # Tell all other players where the player that just connected is.
     $_->send( $new_player->serialize ) for values %$players;
 
+    # Add this new player to our list of players.
     $players->{ $new_player->id } = $new_player;
 
+    # Handle player removal when they have left the game.
     $c->on( finish => sub {
 	$c->app->log->debug(
 	    sprintf "Player disconnected: %s", $c->tx->connection
@@ -50,6 +54,7 @@ sub connect {
 	    for values %$players;
     });
 
+    # Handle an incoming update from the player.
     $c->on( json => sub {
 	my ( $self, $msg ) = @_;
 
@@ -62,12 +67,30 @@ sub connect {
 	my @other_players = grep {
 	    $_ ne $c->tx->connection
 	} keys %$players;
-	    
+
 	# Send the update to every other client.
 	for my $other_player ( @other_players ) {
 	    $players->{$other_player}->send( $player->serialize );
 	}
+
+        if ( $msg->{cast} ) {
+            my ( $x, $y ) = @{ $msg->{cast} };
+            $c->app->log->info(
+                sprintf(
+                    "Player %s cast at %i, %i!",
+                    $c->tx->connection,
+                    $x,
+                    $y,
+                )
+            );
+
+            my $fish = $grid->cast;
+            $c->app->log->info(
+                $fish ? "Caught a $fish pounder!" : "No fish caught :("
+            );
+            $c->app->log->info( $grid->num_fish . " remain!" );
+        }
     });
-}   
+}
 
 1;

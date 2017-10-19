@@ -1,7 +1,9 @@
-%define perl_version 5.26.0
+%define perl_version 5.26.1
 %define prefix       /opt/deeznuts/
 %define perl_path    %{prefix}perl/
 %define perl         %{perl_path}bin/perl
+
+%define debug_package %{nil}
 
 Name:           deeznuts-perl
 Summary:        DeezNuts Perl
@@ -27,7 +29,7 @@ cp %{SOURCE1} .
 /bin/sh Configure -des -Dprefix=%{perl_path} \
                        -Dman1dir=none \
                        -Dman3dir=none \
-                       -Duserelocatableinc
+                       -Duserelocatableinc \
 make
 
 %install

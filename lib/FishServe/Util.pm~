@@ -1,0 +1,8 @@
+package FishServe::Util;
+
+use strictures 2;
+
+require Exporter;
+@ISA = qw( Exporter );
+
+1;

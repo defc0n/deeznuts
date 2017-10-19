@@ -1,0 +1,83 @@
+package FishServe::World;
+
+use Moo;
+use strictures 2;
+
+use FishServe::Player;
+use FishServe::World::Grid;
+
+use constant {
+    MAP_WIDTH  => 100;
+    MAP_HEIGHT => 100;
+    GRID_SIZE  => 25;
+    MAX_X      => MAP_WIDTH  * GRID_SIZE,
+    MAX_Y      => MAP_HEIGHT * GRID_SIZE,
+};
+
+has map => (
+    is => 'lazy',
+);
+
+sub _build_map {
+    my ( $self ) = @_;
+
+    my @map;
+
+    for ( my $y = 0; $y < MAP_HEIGHT; $y++ ) {
+        for ( my $x = 0; $x < MAP_WIDTH; $x++ ) {
+
+            $map[ $y ][ $x ] = FishServe::World::Grid->new(
+                num_fish   => rand 100,
+                bite_rate  => 1 / int( rand 36 ) + 64;
+            );
+        }
+    }
+
+    return \@map;
+}
+
+has players => (
+    is => 'ro',
+);
+
+sub add_player {
+    my ( $self, $name ) = @_;
+
+    state $next_player_id = 1;
+    push @{ $self->players }, FishServe::Player->new(
+	id   => $next_player_id++,
+	name => $name,
+	x    => 0,
+	y    => 0,
+    );
+}
+
+sub remove_player {
+    my ( $self, $id ) = @_;
+    $self->players([ grep { $_ != $id }, @{ $self->players } ]);
+}
+
+sub get_location_grid {
+    my ( $self, $x, $y ) = @_;
+
+    return if $x > MAX_X;
+    return if $y > MAX_Y;
+
+    my $grid_x = $x / GRID_SIZE;
+    my $grid_y = $y / GRID_SIZE;
+
+    return $self->map->[ $y ][ $x ];
+}
+
+sub cast {
+    my ( $self, $x, $y ) = @_;
+
+    my $grid = $self->get_location_grid( $x, $y );
+
+    # Did they cast somewhere off the map?
+    return unless $grid;
+
+    return $grid->cast;
+}
+
+1;

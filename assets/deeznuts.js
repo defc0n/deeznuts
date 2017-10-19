@@ -53,6 +53,8 @@ function startGame ( socket, currentPlayers ) {
     var player_id;
     var otherPlayers = {};
     var stars;
+    var bobber;
+    var castLine;
 
     function preload() {
 	game.load.image( 'sky',  'sky.png' );
@@ -71,7 +73,7 @@ function startGame ( socket, currentPlayers ) {
 	//  A simple background for our game
 	game.add.sprite(0, 0, 'sky');
 
-	//  The platforms group contains the ground and the 2 ledges we can jump on
+	//  The platforms group contains the ground and the 2 ledges to jump on
 	walls = game.add.group();
 
 	//  We will enable physics for any object that is created in this group
@@ -91,20 +93,25 @@ function startGame ( socket, currentPlayers ) {
 		gameObject.body.immovable = true;
 	    }
 	}
-	
+
 	// The player and its settings
 	player = game.add.sprite(32, game.world.height - 150, 'dude');
+        bobber = game.add.sprite(-999, -999, 'star' );
+        bobber.anchor.setTo( .5, .5 );
+        castLine = new Phaser.Line;
 
-	//  We need to enable physics on the player
+	// We need to enable physics on the player
 	game.physics.arcade.enable( player );
 
 	player.body.collideWorldBounds = true;
 
-	//  Our two animations, walking left and right.
+	// Our two animations, walking left and right.
 	player.animations.add('left', [0, 1, 2, 3], 10, true);
 	player.animations.add('right', [5, 6, 7, 8], 10, true);
 
 	cursors = game.input.keyboard.createCursorKeys();
+
+        game.input.mouse.capture = true;
 
 	// Create the other players currently in the game.
 	for ( var i = 0; i < currentPlayers.length; i++ ) {
@@ -120,20 +127,23 @@ function startGame ( socket, currentPlayers ) {
 
     function update() {
 	socket.onmessage = function ( msg ) {
-	    var update = JSON.parse( msg.data );	    
+	    var update = JSON.parse( msg.data );
 
+            // Did we get a message about a player leaving the game?
 	    if ( update.goodbye ) {
 		if ( otherPlayers[update.goodbye] ) {
 		    otherPlayers[update.goodbye].kill();
 		    delete otherPlayers[update.goodbye];
 		}
 	    }
+
+            // Handle an incoming update message about another player.
 	    else {
 		if ( !otherPlayers[update.id] ) {
 		    otherPlayers[update.id] = game.add.sprite(
 			0, 0, 'dude'
 		    );
-		}		
+		}
 
 		otherPlayers[update.id].x = update.x;
 		otherPlayers[update.id].y = update.y;
@@ -143,23 +153,23 @@ function startGame ( socket, currentPlayers ) {
 
 	var hitWall = game.physics.arcade.collide( player, walls );
 
-	//  Reset the players velocity (movement)
+	// Reset the players velocity (movement)
 	player.body.velocity.x = 0;
 	player.body.velocity.y = 0;
 
 	if (cursors.left.isDown) {
-            //  Move to the left
+            // Move to the left
             player.body.velocity.x = -150;
             player.animations.play('left');
 
 	}
 	else if (cursors.right.isDown) {
-            //  Move to the right
+            // Move to the right
             player.body.velocity.x = 150;
             player.animations.play('right');
 	}
 	else {
-            //  Stand still
+            // Stand still
             player.animations.stop();
             player.frame = 4;
 	}
@@ -176,8 +186,33 @@ function startGame ( socket, currentPlayers ) {
 	var playerUpdate = {
 	    x:     player.body.x,
 	    y:     player.body.y,
-	    frame: player.frame 
+	    frame: player.frame
 	};
+
+        // Did they click to cast?
+        if (game.input.activePointer.isDown) {
+            game.input.activePointer.reset();
+            playerUpdate.cast = [
+                game.input.mousePointer.x,
+                game.input.mousePointer.y
+            ];
+
+            bobber.x = game.input.mousePointer.x;
+            bobber.y = game.input.mousePointer.y;
+/*
+            var graphics = new Phaser.Graphics( game );
+
+            graphics.beginFill(0xFF0000);
+            graphics.lineStyle(10, 0xffd900, 1);
+            graphics.moveTo( player.body.x, player.body.y );
+            graphics.lineTo( game.input.mousePointer.x, game.input.mousePointer.y );
+            graphics.endFill();
+
+            window.graphics = graphics;
+*/
+        }
+
+        castLine.fromSprite( player, bobber, false );
 
 	socket.send( JSON.stringify( playerUpdate ) );
     }

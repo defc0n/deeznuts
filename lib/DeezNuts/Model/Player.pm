@@ -5,9 +5,10 @@ use Moo;
 has id => ( is => 'ro', required => 1 );
 has tx => ( is => 'ro', required => 1 );
 
-has x     => ( is => 'rw' );
-has y     => ( is => 'rw' );
-has frame => ( is => 'rw' );
+has x              => ( is => 'rw' );
+has y              => ( is => 'rw' );
+has frame          => ( is => 'rw' );
+has last_cast_time => ( is => 'rw' );
 
 sub send {
     my ( $self, $data ) = @_;

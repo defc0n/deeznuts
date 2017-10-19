@@ -1,0 +1,10 @@
+package FishServe::Player;
+
+use Moo;
+use strictures 2;
+
+has name => (
+    is => 'ro',
+);
+
+1;
